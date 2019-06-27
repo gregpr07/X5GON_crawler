@@ -14,7 +14,6 @@ BOT_NAME = 'x5gon_crawler'
 SPIDER_MODULES = ['x5gon_crawler.spiders']
 NEWSPIDER_MODULE = 'x5gon_crawler.spiders'
 
-
 FEED_EXPORT_ENCODING = 'utf-8'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
