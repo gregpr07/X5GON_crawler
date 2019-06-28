@@ -33,18 +33,21 @@ class X5Spider(scrapy.Spider):
         yield response.follow(ucbenik, callback=self.parseBook)
 
     def GetText(self, source):
-        soup = BeautifulSoup(source)
-        for script in soup(["script", "style", "video", "button", "input"]):
-            script.decompose()
-        text = soup.get_text()
-        # break into lines and remove leading and trailing space on each
-        lines = (line.strip() for line in text.splitlines())
-        # break multi-headlines into a line each
-        chunks = (phrase.strip()
-                  for line in lines for phrase in line.split("  "))
-        # drop blank lines
-        text = '\n'.join(chunk for chunk in chunks if chunk)
-        return(text)
+        if source:
+            soup = BeautifulSoup(source)
+            for script in soup(["script", "style", "video", "button", "input"]):
+                script.decompose()
+            text = soup.get_text()
+            # break into lines and remove leading and trailing space on each
+            lines = (line.strip() for line in text.splitlines())
+            # break multi-headlines into a line each
+            chunks = (phrase.strip()
+                      for line in lines for phrase in line.split("  "))
+            # drop blank lines
+            text = '\n'.join(chunk for chunk in chunks if chunk)
+            return(text)
+        else:
+            return('')
 
     def parseBook(self, response):
         path = response.css('span.unit-path::text').get().replace('\n', '')
