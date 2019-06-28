@@ -1,1 +1,3 @@
-.pyc
+*.pyc
+.DS_Store
+x5gon_crawler/spiders/__pycache__/x5spider.cpython-37.pyc
