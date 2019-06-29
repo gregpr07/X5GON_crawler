@@ -33,7 +33,7 @@ class X5Spider(scrapy.Spider):
         yield response.follow(ucbenik, callback=self.parseBook)
 
     def GetText(self, source):
-        if source:
+        try:
             soup = BeautifulSoup(source)
             for script in soup(["script", "style", "video", "button", "input"]):
                 script.decompose()
@@ -46,12 +46,19 @@ class X5Spider(scrapy.Spider):
             # drop blank lines
             text = '\n'.join(chunk for chunk in chunks if chunk)
             return(text)
-        else:
+        except:
             return('')
+
+    def getTitle(self, path):
+        try:
+            return (re.findall("\|\s((\w)+(\s\w+)*)", path)[1][0])
+        except:
+            return (path)
 
     def parseBook(self, response):
         path = response.css('span.unit-path::text').get().replace('\n', '')
-        title = re.findall("\|\s((\w)+(\s\w+)*)", path)[1][0]
+        title = self.getTitle(path)
+
         url = response.url
         providerurl = response.urljoin('../')
         licenca = response.css('#show_cclicenca a::attr(href)').get()
@@ -59,7 +66,7 @@ class X5Spider(scrapy.Spider):
         text_left = self.GetText(response.css('.page.page-left').get())
         text_right = self.GetText(response.css('.page.page-right').get())
 
-        #title1 = response.css('.container h1::text').get()
+        # title1 = response.css('.container h1::text').get()
 
         imgs = response.css('.container img::attr(src)').getall()
         videos = response.css('.container video::attr(src)').getall()
@@ -70,12 +77,12 @@ class X5Spider(scrapy.Spider):
 
         yield {
             'title': title,
-            'description': text_left+text_right,
-            'resources': {'imgs': absimgs, 'videos': absvideos, 'audios': absaudios},
             'path': path,
             'provider_uri': self.provider,
             'sub_url': providerurl,
             'material_url': url,
+            'description': text_left+text_right,
+            'resources': {'imgs': absimgs, 'videos': absvideos, 'audios': absaudios},
             'language': 'sl',
             'type': {"ext": "html", "mime": "text/html"},
             'date_created': self.dateYMD,
