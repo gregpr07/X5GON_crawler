@@ -18,6 +18,8 @@ class X5Spider(scrapy.Spider):
     dateYMD = str(datetime.now().year)+"-" + \
         str(datetime.now().month)+"-"+str(datetime.now().day)
 
+    colours = {'red': 'hard', 'blue': 'intermediate', 'green': 'easy'}
+
     def parse(self, response):
         to_visit = response.css('.ucbenik a::attr(href)').getall()
 
@@ -49,6 +51,20 @@ class X5Spider(scrapy.Spider):
         except:
             return('')
 
+    def GetTasks(self, response):
+        tasks = []
+        for color in ['red', 'green', 'blue']:
+            all_responses = response.xpath(
+                f'//*[contains(concat(" ",normalize-space(@class)," ")," number-{color} ")]').getall()
+            for x in range(len(all_responses)):
+                difficulty = self.colours[color]
+                num = BeautifulSoup(all_responses[x]).get_text()
+                text = self.GetText(response.xpath(
+                    f'//*[contains(concat(" ",normalize-space(@class)," ")," number-{color} ")]/..').getall()[x])
+                tasks.append(
+                    {num: {'difficulty': difficulty, 'content': text}})
+        return(tasks)
+
     def getTitle(self, path):
         try:
             return (re.findall("\|\s((\w)+(\s\w+)*)", path)[1][0])
@@ -58,6 +74,8 @@ class X5Spider(scrapy.Spider):
     def parseBook(self, response):
         path = response.css('span.unit-path::text').get().replace('\n', '')
         title = self.getTitle(path)
+
+        tasks = self.GetTasks(response)
 
         url = response.url
         providerurl = response.urljoin('../')
@@ -78,14 +96,15 @@ class X5Spider(scrapy.Spider):
         yield {
             'title': title,
             'path': path,
-            'provider_uri': self.provider,
-            'sub_url': providerurl,
+            'provider_uri': providerurl,
+            'provider': self.provider,
             'material_url': url,
             'description': text_left+text_right,
+            'tasks': tasks,
             'resources': {'imgs': absimgs, 'videos': absvideos, 'audios': absaudios},
             'language': 'sl',
             'type': {"ext": "html", "mime": "text/html"},
-            'date_created': self.dateYMD,
+            'date_retrieved': self.dateYMD,
             'license': licenca,
         }
         next_page = response.css('.paging-right a::attr(href)').get()
