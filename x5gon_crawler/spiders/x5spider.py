@@ -27,7 +27,7 @@ class X5Spider(scrapy.Spider):
         for ucbenik in to_visit:
             yield response.follow(ucbenik, callback=self.gifClick)
         # SINGLE ITEM
-        # yield response.follow(to_visit[0], callback=self.gifClick)
+        # yield response.follow(to_visit[0], callback=self.gifClick) 
 
     def gifClick(self, response):
         ucbenik = response.css(
