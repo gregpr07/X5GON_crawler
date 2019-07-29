@@ -8,7 +8,7 @@ class X5Spider(scrapy.Spider):
     name = "cbcampus_spider"
 
     page = 0
-    total_results = 28
+    total_results = 29
 
     baseurl = f'https://open.bccampus.ca/browse-our-collection/find-open-textbooks/?start={page}&subject=&contributor=&searchTerm=&keyword='
 
