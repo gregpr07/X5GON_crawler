@@ -1,7 +1,8 @@
 RUN SPIDER:
 
-scrapy crawl engageNYspider -o _.json
-scrapy crawl cbcampus_spider -o _.json
+scrapy crawl engageNYspider -o \*.json
+scrapy crawl cbcampus_spider -o \*.json
+scrapy crawl cnx_spider -o \*.json
 
 To crawl:
 
