@@ -9,6 +9,10 @@ from scrapy.selector import Selector
 import scrapy
 from datetime import datetime
 import logging
+import time
+
+from selenium.webdriver.remote.remote_connection import LOGGER
+LOGGER.setLevel(logging.WARNING)
 
 
 class X5Spider(scrapy.Spider):
@@ -28,7 +32,8 @@ class X5Spider(scrapy.Spider):
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
     options.add_argument('window-size=1200x600')
-    driver = webdriver.Chrome(chrome_options=options)
+
+    driver = webdriver.Chrome(options=options)
     driver.get(baseurl)
     wait = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
         (By.CSS_SELECTOR, ".books .book")))
@@ -39,10 +44,10 @@ class X5Spider(scrapy.Spider):
     def parse(self, response):
 
         # ALL BOOKS
-        # for ucbenik in self.to_visit:
-        #    yield response.follow(ucbenik, callback=self.parseBook)
+        for ucbenik in self.to_visit:
+            yield response.follow(ucbenik, callback=self.parseBook)
         # SINGLE ITEM
-        yield response.follow(self.to_visit[0], callback=self.parseBook)
+        #yield response.follow(self.to_visit[0], callback=self.parseBook)
 
     def GetText(self, source):
         try:
@@ -65,38 +70,60 @@ class X5Spider(scrapy.Spider):
         options = webdriver.ChromeOptions()
         options.add_argument('headless')
         options.add_argument('window-size=1200x600')
-        driver = webdriver.Chrome(chrome_options=options)
+
+        driver = webdriver.Chrome(options=options)
         driver.get(response.url)
-        for i in range(10):
+
+        wait = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, ".media-footer #metadata-tab")))
+        # open meatadata
+        driver.find_element_by_css_selector(
+            '.media-footer #metadata-tab').click()
+        wait = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "div.book-page-toggle button:nth-child(2)")))
+
+        driver.find_element_by_xpath('//*[@id="main-content"]/div[3]/div/div[4]/div/div/button[2]').click()
+
+        previous_url = ''
+        current_url = ''
+
+        while True:
             wait = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
                 (By.CSS_SELECTOR, "#content .main .media-body #content")))
+
+            current_url = driver.current_url
+            if current_url != previous_url:
+                previous_url = current_url
+            else:
+                break
+
+            metadata_html_dl = driver.find_element_by_css_selector('.dl-horizontal.dl-metadata').get_attribute('innerHTML')
+            html = Selector(text=metadata_html_dl)
+            dts = html.css('dt').getall()
+            dds = html.css('dd').getall()
+            dts_txt = [self.GetText(x).replace(':','').lower() for x in dts]
+            dictionary = {}
+            for i in range(len(dts_txt)):
+                dictionary[dts_txt[i]] = dds[i]
+
+
+            title = self.GetText(dictionary['name'])
+
+
             content = driver.find_element_by_css_selector(
                 '#content .main .media-body #content')
             text = self.GetText(content.get_attribute('innerHTML'))
-            try:
-                driver.find_element_by_css_selector('.nav.next').click()
-            except:
-                break
+
+            driver.find_element_by_css_selector('.nav.next').click()
+
             yield {
-                'text': text[:100],
+                'title': title,
+                'provider_uri': self.baseurl,
+                'material_url': current_url,
+                'description': text,
+                'date_retrieved': self.dateYMD,
+                'type': {"ext": "html", "mime": "text/html"},
+                'unproccesed': dictionary
             }
 
-
-'''
-
-SELENIUM
-
-driver.find_element_by_css_selector('#content .main .media-body #content')
-
-    def disableImages(self):
-        # get the Firefox profile object
-        firefoxProfile = FirefoxProfile()
-        # Disable CSS
-        # firefoxProfile.set_preference('permissions.default.stylesheet', 2)
-        # Disable images
-        firefoxProfile.set_preference('permissions.default.image', 2)
-        # Disable Flash
-        firefoxProfile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                      'false')
-        # Set the modified profile while creating the browser object
-        self.browserHandle = webdriver.Firefox(firefoxProfile)'''
+        driver.close()
