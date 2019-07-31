@@ -1,4 +1,4 @@
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+# from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 # available since 2.26.0
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait  # available since 2.4.0
@@ -24,7 +24,11 @@ class X5Spider(scrapy.Spider):
     dateYMD = str(datetime.now().year)+"-" + \
         str(datetime.now().month)+"-"+str(datetime.now().day)
 
-    driver = webdriver.Firefox()
+    # load CHROME headless
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+    options.add_argument('window-size=1200x600')
+    driver = webdriver.Chrome(chrome_options=options)
     driver.get(baseurl)
     wait = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
         (By.CSS_SELECTOR, ".books .book")))
@@ -35,14 +39,14 @@ class X5Spider(scrapy.Spider):
     def parse(self, response):
 
         # ALL BOOKS
-        for ucbenik in self.to_visit:
-            yield response.follow(ucbenik, callback=self.parseBook)
+        # for ucbenik in self.to_visit:
+        #    yield response.follow(ucbenik, callback=self.parseBook)
         # SINGLE ITEM
-        # yield response.follow(self.to_visit[0], callback=self.parseBook)
+        yield response.follow(self.to_visit[0], callback=self.parseBook)
 
     def GetText(self, source):
         try:
-            soup = BeautifulSoup(source)
+            soup = BeautifulSoup(source, "lxml")
             for script in soup(["script", "style", "video", "button", "input", "h2"]):
                 script.decompose()
             text = soup.get_text()
@@ -58,7 +62,10 @@ class X5Spider(scrapy.Spider):
             return('')
 
     def parseBook(self, response):
-        driver = webdriver.Firefox()
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        options.add_argument('window-size=1200x600')
+        driver = webdriver.Chrome(chrome_options=options)
         driver.get(response.url)
         for i in range(10):
             wait = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
