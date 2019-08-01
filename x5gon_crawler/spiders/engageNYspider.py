@@ -1,8 +1,10 @@
 from bs4 import BeautifulSoup
 import scrapy
+from scrapy import Selector
 from datetime import datetime
 import re
 import logging
+import requests
 
 
 class X5Spider(scrapy.Spider):
@@ -27,24 +29,23 @@ class X5Spider(scrapy.Spider):
         for book in to_visit:
             yield response.follow(book, callback=self.parseBook)
         # SINGLE ITEM
-        
-        # yield response.follow(to_visit[0], callback=self.parseBook)
 
-    def ParsePdf(self, response):
-        #response.css('.field-content #pdf_reader embed::attr(src)').get()
-        logging.warning('what')
+        # yield response.follow(to_visit[0], callback=self.parseBook)
 
     def parseBook(self, response):
 
         title = response.css('.pane-title h2.eny-title::text').get()
+
         if 'lesson' in title.lower():
-            
 
             file_links = response.css(
                 '.table-responsive tbody tr a.view.hidden-xs::attr(href)').getall()
             pdfs = []
             for file_link in file_links:
-                pdfs.append(self.baseurl + file_link)
+                html = requests.get(self.baseurl+file_link).content
+                bs = BeautifulSoup(html)
+                pdfs.append([item['data'] for item in bs.find_all(
+                    'object', attrs={'data': True})][0])
 
             url = response.url
             providerurl = self.provider
