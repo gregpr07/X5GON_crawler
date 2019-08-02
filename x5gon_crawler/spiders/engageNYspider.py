@@ -32,6 +32,28 @@ class X5Spider(scrapy.Spider):
 
         # yield response.follow(to_visit[0], callback=self.parseBook)
 
+    def GetText(self, source):
+        try:
+            soup = BeautifulSoup(source, "lxml")
+            for script in soup(["script", "style", "video", "button", "input"]):
+                script.decompose()
+            text = soup.get_text()
+            # break into lines and remove leading and trailing space on each
+            lines = (line.strip() for line in text.splitlines())
+            # break multi-headlines into a line each
+            chunks = (phrase.strip()
+                      for line in lines for phrase in line.split("  "))
+            # drop blank lines
+            text = '\n'.join(chunk for chunk in chunks if chunk)
+            return(text)
+        except:
+            return('')
+
+    def convert(self, date_time):
+        format = '%a %m/%d/%Y'  # The format
+        time_date = datetime.strptime(date_time, format)
+        return str(time_date.year)+('-')+str(time_date.month)+('-')+str(time_date.day)
+
     def parseBook(self, response):
 
         title = response.css('.pane-title h2.eny-title::text').get()
@@ -47,14 +69,25 @@ class X5Spider(scrapy.Spider):
                 pdfs.append([item['data'] for item in bs.find_all(
                     'object', attrs={'data': True})][0])
 
+            description = self.GetText(
+                response.css('.field .field-items ul').get())
+
             url = response.url
             providerurl = self.provider
+
+            date = self.convert(response.css(
+                'dl.metatag-dl > dd:nth-child(2)::text').get().strip(' -'))
+
             licenca = response.css(
                 '.meta-cc-image a::attr(href)').get()
 
             yield {
                 'title': title,
-                'material_url': url,
+                'description': description,
+                'material_uri': url,
+                'material_url': pdfs,
+                'language': 'en',
+                'type': {"ext": "html", "mime": "text/html"},
                 'date_retrieved': self.dateYMD,
                 'license': licenca,
                 'pdfs': pdfs,
