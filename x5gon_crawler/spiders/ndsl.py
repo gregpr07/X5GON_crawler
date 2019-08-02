@@ -8,9 +8,11 @@ import requests
 
 
 class X5Spider(scrapy.Spider):
-    name = "engageNYspider"
+    name = "ndsl_spider"
 
-    baseurl = f'https://www.engageny.org'
+    'https://nsdl.oercommons.org/browse?batch_size=100&batch_start=41000'
+
+    baseurl = f'https://nsdl.oercommons.org'
 
     provider = 'engageny.org'
 
@@ -70,12 +72,12 @@ class X5Spider(scrapy.Spider):
                     'object', attrs={'data': True})][0])
 
             description = ' '.join([self.GetText(x) for x in (
-                response.css('.pane-content .field-item').getall())])
+                response.css('.field .field-item').getall())])
 
             url = response.url
             providerurl = self.provider
 
-            date_created = self.convert(response.css(
+            date = self.convert(response.css(
                 'dl.metatag-dl > dd:nth-child(2)::text').get().strip(' -'))
 
             licenca = response.css(
@@ -88,7 +90,6 @@ class X5Spider(scrapy.Spider):
                 'material_url': pdfs,
                 'language': 'en',
                 'type': {"ext": "html", "mime": "text/html"},
-                'date_created': date_created,
                 'date_retrieved': self.dateYMD,
                 'license': licenca,
                 'pdfs': pdfs,
