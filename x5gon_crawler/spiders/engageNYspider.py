@@ -52,7 +52,7 @@ class X5Spider(scrapy.Spider):
     def convert(self, date_time):
         format = '%a %m/%d/%Y'  # The format
         time_date = datetime.strptime(date_time, format)
-        return str(time_date.year)+('-')+str(time_date.month)+('-')+str(time_date.day)
+        return time_date.strftime("%Y-%m-%d")
 
     def parseBook(self, response):
 
@@ -65,7 +65,7 @@ class X5Spider(scrapy.Spider):
             pdfs = []
             for file_link in file_links:
                 html = requests.get(self.baseurl+file_link).content
-                bs = BeautifulSoup(html)
+                bs = BeautifulSoup(html, 'lxml')
                 pdfs.append([item['data'] for item in bs.find_all(
                     'object', attrs={'data': True})][0])
 
@@ -81,18 +81,27 @@ class X5Spider(scrapy.Spider):
             licenca = response.css(
                 '.meta-cc-image a::attr(href)').get()
 
-            yield {
-                'title': title,
-                'description': description,
-                'material_uri': url,
-                'material_url': pdfs,
-                'language': 'en',
-                'type': {"ext": "html", "mime": "text/html"},
-                'date_created': date_created,
-                'date_retrieved': self.dateYMD,
-                'license': licenca,
-                'pdfs': pdfs,
-            }
+            for pdf in pdfs:
+                concat = {}
+                for word in ['student', 'teacher']:
+                    if word in pdf:
+                        concat = {'created_for': word}
+
+                content = {
+                    'title': title,
+                    'description': description,
+                    'provider_uri': url,
+                    'material_url': pdf,
+                    'language': 'en',
+                    'type': {"ext": "html", "mime": "text/html"},
+                    'date_created': date_created,
+                    'date_retrieved': self.dateYMD,
+                    'license': licenca,
+                }
+
+                content.update(concat)
+
+                yield content
 
         next_page = response.css(
             '.panel-pane .book-nav-next a::attr(href)').get()

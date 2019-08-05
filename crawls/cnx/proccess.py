@@ -7,8 +7,8 @@ import json
 
 def convert(date_time):
     format = '%b %d, %Y'  # The format
-    datetime_str = datetime.datetime.strptime(date_time, format)
-    return datetime_str
+    time_date = datetime.datetime.strptime(date_time, format)
+    return time_date.strftime("%Y-%m-%d")
 
 
 processed_json = []
