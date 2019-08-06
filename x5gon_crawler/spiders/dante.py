@@ -8,18 +8,19 @@ class X5Spider(scrapy.Spider):
 
     baseurl = 'https://www2.colegiodante.com.br/rea/lista.php?pag='
 
+    basebase = 'https://www2.colegiodante.com.br/rea/'
+
     provider = 'colegiodante.com'
 
     start_urls = [
-        baseurl+str(1),
+        baseurl+str(100),
     ]
 
-    dateYMD = str(datetime.now().year)+"-" + \
-        str(datetime.now().month)+"-"+str(datetime.now().day)
+    dateYMD = str(datetime.now().strftime("%Y-%m-%d"))
 
     def parse(self, response):
-        for i in range(2, 13):
-            response.follow(self.baseurl+str(i), callback=self.loop)
+        for i in range(1, 13):
+            yield response.follow(self.baseurl+str(i), callback=self.loop)
 
     def loop(self, response):
         to_visit = response.css('.lista_conteudo h2 a::attr(href)').getall()
@@ -32,7 +33,7 @@ class X5Spider(scrapy.Spider):
         description = self.GetText(response.css('.conteudo_descricao').get())
 
         file_link = response.css(
-            '.conteudo_display > a:nth-child(1)::attr(href)').getall()
+            '.conteudo_display > a:nth-child(1)::attr(href)').get()
 
         url = response.url
         providerurl = self.provider
@@ -44,9 +45,9 @@ class X5Spider(scrapy.Spider):
             'title': title,
             'description': description,
             'provider_uri': url,
-            'material_url': file_link,
+            'material_url': self.basebase + file_link,
             'language': 'pt',
-            'type': {"ext": "html", "mime": "text/html"},
+            'type': {"ext": "pdf", "mime": "application/pdf"},
             'date_retrieved': self.dateYMD,
             'license': licenca,
         }
