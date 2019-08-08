@@ -25,8 +25,7 @@ class X5Spider(scrapy.Spider):
         f'{baseurl}',
     ]
 
-    dateYMD = str(datetime.now().year)+"-" + \
-        str(datetime.now().month)+"-"+str(datetime.now().day)
+    dateYMD = str(datetime.now().strftime("%Y-%m-%d"))
 
     # load CHROME headless
     options = webdriver.ChromeOptions()
@@ -47,7 +46,7 @@ class X5Spider(scrapy.Spider):
         for ucbenik in self.to_visit:
             yield response.follow(ucbenik, callback=self.parseBook)
         # SINGLE ITEM
-        #yield response.follow(self.to_visit[0], callback=self.parseBook)
+        # yield response.follow(self.to_visit[0], callback=self.parseBook)
 
     def GetText(self, source):
         try:
@@ -82,7 +81,8 @@ class X5Spider(scrapy.Spider):
         wait = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, "div.book-page-toggle button:nth-child(2)")))
 
-        driver.find_element_by_xpath('//*[@id="main-content"]/div[3]/div/div[4]/div/div/button[2]').click()
+        driver.find_element_by_xpath(
+            '//*[@id="main-content"]/div[3]/div/div[4]/div/div/button[2]').click()
 
         previous_url = ''
         current_url = ''
@@ -97,18 +97,17 @@ class X5Spider(scrapy.Spider):
             else:
                 break
 
-            metadata_html_dl = driver.find_element_by_css_selector('.dl-horizontal.dl-metadata').get_attribute('innerHTML')
+            metadata_html_dl = driver.find_element_by_css_selector(
+                '.dl-horizontal.dl-metadata').get_attribute('innerHTML')
             html = Selector(text=metadata_html_dl)
             dts = html.css('dt').getall()
             dds = html.css('dd').getall()
-            dts_txt = [self.GetText(x).replace(':','').lower() for x in dts]
+            dts_txt = [self.GetText(x).replace(':', '').lower() for x in dts]
             dictionary = {}
             for i in range(len(dts_txt)):
                 dictionary[dts_txt[i]] = dds[i]
 
-
             title = self.GetText(dictionary['name'])
-
 
             content = driver.find_element_by_css_selector(
                 '#content .main .media-body #content')

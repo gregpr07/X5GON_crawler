@@ -17,8 +17,7 @@ class X5Spider(scrapy.Spider):
     start_urls = [
         f'{baseurl}',
     ]
-    dateYMD = str(datetime.now().year)+"-" + \
-        str(datetime.now().month)+"-"+str(datetime.now().day)
+    dateYMD = str(datetime.now().strftime("%Y-%m-%d"))
 
     def parse(self, response):
         to_visit = response.css(
