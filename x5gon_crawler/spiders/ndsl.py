@@ -4,34 +4,24 @@ from scrapy import Selector
 from datetime import datetime
 import re
 import logging
-import requests
 
 
 class X5Spider(scrapy.Spider):
     name = "ndsl_spider"
 
-    'https://nsdl.oercommons.org/browse?batch_size=100&batch_start=41000'
+    baseurl = 'https://nsdl.oercommons.org/browse?batch_size=100&batch_start='
 
-    baseurl = f'https://nsdl.oercommons.org'
+    providerurl = f'https://nsdl.oercommons.org'
 
     provider = 'engageny.org'
 
+    emptylicence = 'https://creativecommons.org/licenses/by-nc-sa/4.0/'
+
     start_urls = [
-        f'{baseurl}',
+        baseurl
     ]
 
     dateYMD = str(datetime.now().strftime("%Y-%m-%d"))
-
-    def parse(self, response):
-        to_visit = response.css(
-            '.pane-content #mini-panel-common_core_curriculum a::attr(href)').getall()
-
-        # ALL BOOKS
-        for book in to_visit:
-            yield response.follow(book, callback=self.parseBook)
-        # SINGLE ITEM
-
-        # yield response.follow(to_visit[0], callback=self.parseBook)
 
     def GetText(self, source):
         try:
@@ -51,50 +41,52 @@ class X5Spider(scrapy.Spider):
             return('')
 
     def convert(self, date_time):
-        format = '%a %m/%d/%Y'  # The format
-        time_date = datetime.strptime(date_time, format)
-        return str(time_date.year)+('-')+str(time_date.month)+('-')+str(time_date.day)
+        formats = "%m/%d/%Y"  # The format
+        time_date = datetime.strptime(date_time, formats)
+        return time_date.strftime("%Y-%m-%d")
 
-    def parseBook(self, response):
+    def parse(self, response):
+        num_loop = int(
+            int(response.css('.items-number::text').get().strip('()'))/100+1)
+        for i in range(num_loop):
+            yield response.follow(self.baseurl+str(i*100), callback=self.parseBatch)
 
-        title = response.css('.pane-title h2.eny-title::text').get()
+    def parseBatch(self, response):
+        to_visit = response.css('.item-title a::attr(href)').getall()
+        for page in to_visit:
+            yield response.follow(page, callback=self.parsePage)
 
-        if 'lesson' in title.lower():
+    def parsePage(self, response):
 
-            file_links = response.css(
-                '.table-responsive tbody tr a.view.hidden-xs::attr(href)').getall()
-            pdfs = []
-            for file_link in file_links:
-                html = requests.get(self.baseurl+file_link).content
-                bs = BeautifulSoup(html)
-                pdfs.append([item['data'] for item in bs.find_all(
-                    'object', attrs={'data': True})][0])
+        title = response.css(
+            '.material-title > a:nth-child(1)::text').get()
+        material_url = response.css('#goto::attr(href)').get()
 
-            description = ' '.join([self.GetText(x) for x in (
-                response.css('.field .field-item').getall())])
+        description = response.css('dd.text p::text').get()
 
-            url = response.url
-            providerurl = self.provider
+        url = response.url
 
-            date = self.convert(response.css(
-                'dl.metatag-dl > dd:nth-child(2)::text').get().strip(' -'))
+        date = self.convert(response.css(
+            '.materials-details-first-part dd.text::text').get())
 
-            licenca = response.css(
-                '.meta-cc-image a::attr(href)').get()
+        mime = response.css('dd span[itemprop=genre]::text').get()
 
-            yield {
-                'title': title,
-                'description': description,
-                'material_uri': url,
-                'material_url': pdfs,
-                'language': 'en',
-                'type': {"ext": "html", "mime": "text/html"},
-                'date_retrieved': self.dateYMD,
-                'license': licenca,
-                'pdfs': pdfs,
-            }
+        language = response.css(
+            '.material-details-second-part span::attr(content)').get()
+        licenca = response.css(
+            '.material-details-second-part dd a[rel=license]::attr(href)').get()
 
-        next_page = response.css(
-            '.panel-pane .book-nav-next a::attr(href)').get()
+        if not licenca:
+            licenca = self.emptylicence
 
-        yield response.follow(next_page, callback=self.parseBook)
+        yield {
+            'title': title,
+            'description': description,
+            'material_uri': url,
+            'material_url': material_url,
+            'language': language,
+            'type': {"ext": "html", "mime": mime},
+            'date_created': date,
+            'date_retrieved': self.dateYMD,
+            'license': licenca,
+        }
