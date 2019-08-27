@@ -69,7 +69,7 @@ class X5Spider(scrapy.Spider):
                     'object', attrs={'data': True})][0])
 
             description = ' '.join([self.GetText(x) for x in (
-                response.css('.pane-content .field-item').getall())])
+                response.css('.pane-content .field-item').getall())]).replace('\n', ' ').replace('  ', ' ').strip(' ')
 
             url = response.url
             providerurl = self.provider
@@ -90,9 +90,9 @@ class X5Spider(scrapy.Spider):
                     'title': title,
                     'description': description,
                     'provider_uri': url,
-                    'material_url': pdf,
+                    'material_url': pdf.strip('#view=Fit'),
                     'language': 'en',
-                    'type': {"ext": "html", "mime": "text/html"},
+                    'type': {"ext": "pdf", "mime": "application/pdf"},
                     'date_created': date_created,
                     'date_retrieved': self.dateYMD,
                     'license': licenca,
