@@ -80,6 +80,33 @@ class X5Spider(scrapy.Spider):
             licenca = response.css(
                 '.meta-cc-image a::attr(href)').get()
 
+            metadata = {
+                'subject': [],
+                'grade': [],
+                'topic': [],
+                'ccls': [],
+                'resource-type': []
+            }
+            i = 0
+            while True:
+                i += 1
+                dd = response.xpath(
+                    f'//*[@id="mini-panel-node_extras"]/div/div/div[3]/div/div/div/div/dl/dd[{i}]').get()
+                logging.warning(dd)
+                if not dd:
+                    break
+
+                for x in metadata:
+                    if x in dd:
+                        meta_link = self.baseurl + \
+                            Selector(text=dd).css('a::attr(href)').get()
+                        meta_text = Selector(text=dd).css('a::text').get()
+                        metadata[x].append({
+                            "label": meta_text,
+                            "url": meta_link
+                        })
+                        break
+
             for pdf in pdfs:
                 concat = {}
                 for word in ['student', 'teacher']:
@@ -96,6 +123,7 @@ class X5Spider(scrapy.Spider):
                     'date_created': date_created,
                     'date_retrieved': self.dateYMD,
                     'license': licenca,
+                    'metadata': metadata
                 }
 
                 content.update(concat)
