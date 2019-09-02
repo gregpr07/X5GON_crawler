@@ -71,7 +71,7 @@ def convertTime(date_time):
 
 
 with open(OUTPUT_LOCATION+'openlearnware.json', 'w+', encoding='utf-8') as f:
-    f.write('[')
+    f.write('[\n')
     parent_meta = {}
     for i in range(1, 5000):
         print('-----', str(i), '-----')
@@ -86,24 +86,33 @@ with open(OUTPUT_LOCATION+'openlearnware.json', 'w+', encoding='utf-8') as f:
 
             # if material has a parent
             if r_json['parent']:
-                # and material uuid equals parent_meta that is saved
-                if r_json['parent'] == parent_meta['metadata']['uuid']:
-                    content = parent_meta
 
-                    material_url = getMaterialLink(
-                        r_json['uuid'], r_json['characteristicType'])
+                for uuid_loop in parent_meta:
+                    # and material uuid equals any meta that is saved
+                    if r_json['parent'] == uuid_loop:
+                        uuid = r_json['uuid']
 
-                    typez = getType(r_json['characteristicType'])
+                        print('found parent for', uuid)
 
-                    content['type'] = typez
-                    content['material_url'] = material_url
-                    content['metadata']['child_meta']['parent_uuid'] = r_json['parent']
-                    content['metadata']['child_meta']['title'] = r_json['name']
+                        content = parent_meta[uuid_loop]
 
-                    parent_meta = {}
+                        material_url = getMaterialLink(
+                            r_json['uuid'], r_json['characteristicType'])
 
-                else:
-                    continue
+                        typez = getType(r_json['characteristicType'])
+
+                        content['type'] = typez
+                        content['material_url'] = material_url
+
+                        content['metadata']['id'] = materialID
+                        content['metadata']['uuid'] = uuid
+                        content['metadata']['if_child_meta']['parent_uuid'] = r_json['parent']
+                        content['metadata']['if_child_meta']['title'] = r_json['name']
+
+                        #parent_meta.pop(uuid_loop, None)
+
+                    else:
+                        continue
             # else means that material is a parent
             else:
                 title = r_json['name']
@@ -152,9 +161,11 @@ with open(OUTPUT_LOCATION+'openlearnware.json', 'w+', encoding='utf-8') as f:
                 }
 
                 if r_json['childs']:
-                    parent_meta = content
+                    parent_meta[uuid] = content
 
-            # ouput something
+            # ouput
             json.dump(content, f, indent=2)
-            f.write(',')
-    f.write(']')
+            print('appended to json')
+            f.write(',\n')
+
+    f.write('\n]')
