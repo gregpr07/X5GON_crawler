@@ -3,6 +3,8 @@ import datetime
 from slugify import slugify
 import json
 
+# python3.7 x5gon_crawler/spiders/openlearnware.py
+
 APIurl = 'https://openlearnware.tu-darmstadt.de/olw-rest-db/api/resource-detailview/index/'
 resourceURL = 'https://www.openlearnware.de/resource/'
 
@@ -107,7 +109,8 @@ with open(OUTPUT_LOCATION+'openlearnware.json', 'w+', encoding='utf-8') as f:
                             content['metadata']['id'] = materialID
                             content['metadata']['uuid'] = uuid
                             content['metadata']['if_child_meta']['parent_uuid'] = r_json['parent']
-                            content['metadata']['if_child_meta']['title'] = r_json['name']
+                            content['metadata']['if_child_meta']['title'] = r_json['name'].replace(
+                                '\n', ' ')
 
                             #parent_meta.pop(uuid_loop, None)
 
@@ -115,7 +118,8 @@ with open(OUTPUT_LOCATION+'openlearnware.json', 'w+', encoding='utf-8') as f:
                             continue
                 # else means that material is a parent
                 else:
-                    title = r_json['name']
+                    title = r_json['name'].replace(
+                        '\n', ' ')
                     uuid = r_json['uuid']
 
                     material_url = getMaterialLink(
@@ -132,7 +136,7 @@ with open(OUTPUT_LOCATION+'openlearnware.json', 'w+', encoding='utf-8') as f:
                     date_created = convertTime(r_json["creationDate"])
                     date_retrieved = dateYMD
 
-                    description = r_json['description']
+                    description = r_json['description'].replace('\n', ' ')
 
                     areas = r_json['areas']
 
