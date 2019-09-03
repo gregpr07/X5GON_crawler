@@ -10,6 +10,8 @@ resourceURL = 'https://www.openlearnware.de/resource/'
 
 OUTPUT_LOCATION = './crawls/openlearnware/'
 
+jsonname = 'openlearnware_v1.json'
+
 cdn_base = 'https://olw-material.hrz.tu-darmstadt.de/olw-konv-repository/material'
 
 dateYMD = str(datetime.datetime.now().strftime("%Y-%m-%d"))
@@ -72,7 +74,7 @@ def convertTime(date_time):
 # convert int time
 
 
-with open(OUTPUT_LOCATION+'openlearnware.json', 'w+', encoding='utf-8') as f:
+with open(OUTPUT_LOCATION+jsonname, 'w+', encoding='utf-8') as f:
     f.write('[\n')
     parent_meta = {}
     for i in range(1, 5000):
