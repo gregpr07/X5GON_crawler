@@ -1,18 +1,22 @@
 import json
+import re
 import requests
 from scrapy import Selector
+from datetime import datetime
 
 json_file = open('data_oerhoernchen20-highereducation_0_19509.json', 'r')
 json_read = json.load(json_file)
 
 all_repos = {}
 
+dateYMD = str(datetime.now().strftime("%Y-%m-%d"))
+
 # parse TIBAv
 
 
 def parseTIBAV():
     OUTPUT_LOCATION = ''
-    jsonname = 'parsed.json'
+    jsonname = 'tibav_v1.json'
 
     with open(OUTPUT_LOCATION+jsonname, 'w+', encoding='utf-8') as f:
         f.write('[\n')
@@ -36,6 +40,12 @@ def parseTIBAV():
                     language = selector_html.css(
                         '.table td.value div::attr(lang)').get()
 
+                    raw_date_find = selector_html.css(
+                        'textarea.form-control::text').get()
+
+                    date_created = re.findall(
+                        'year=\{(\d{4})\}', raw_date_find)[0] + '-01-01'
+
                     try:
                         description = material["description"]
                     except:
@@ -49,17 +59,23 @@ def parseTIBAV():
                         'material_url': material_url,
                         'language': language,
                         'type': {"ext": "mp4", "mime": "video/mp4"},
-                        # 'date_created': date_created,
-                        # 'date_retrieved': self.dateYMD,
+                        'date_created': date_created,
+                        'date_retrieved': dateYMD,
                         'license': material["license_url"]
                     }
+                else:
+                    print('not tibav')
             except Exception as e:
                 print('\033[93mEXCEPTION:', e)
                 print('\033[92m...continuing with the loop\033[0m\n')
 
-            json.dump(content, f, indent=2)
-            print('appended to json')
-            f.write(',\n')
+            if content:
+                json.dump(content, f, indent=2)
+                f.write(',\n')
+                print('appended to json')
+            else:
+                print('content is empty, skipping')
+
             # break
 
         f.write('\n]')
