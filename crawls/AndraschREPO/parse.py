@@ -30,47 +30,47 @@ def parseTIBAV():
                 continue
             print('-----', str(i), '-----')
             try:
-            if material['projectkey'] == 'tibav':
-                material_link = material["main_url"]
+                if material['projectkey'] == 'tibav':
+                    material_link = material["main_url"]
 
-                raw_html = requests.get(material_link).text
-                selector_html = Selector(text=raw_html)
+                    raw_html = requests.get(material_link).text
+                    selector_html = Selector(text=raw_html)
 
-                material_url = 'http:' + \
-                    str(selector_html.css('video source::attr(src)').get())
+                    material_url = 'http:' + \
+                        str(selector_html.css('video source::attr(src)').get())
 
-                language = selector_html.css(
-                    '.table td.value div::attr(lang)').get()
+                    language = selector_html.css(
+                        '.table td.value div::attr(lang)').get()
 
-                raw_date_find = selector_html.css(
-                    'textarea.form-control::text').get()
+                    raw_date_find = selector_html.css(
+                        'textarea.form-control::text').get()
 
-                date_created = re.findall(
-                    'year=\{(\d{4})\}', raw_date_find)[0]
-                if date_created:
-                    date_created += '-01-01'
+                    date_created = re.findall(
+                        'year=\{(\d{4})\}', raw_date_find)[0]
+                    if date_created:
+                        date_created += '-01-01'
+                    else:
+                        date_created = ''
+
+                    try:
+                        description = material["description"]
+                    except:
+                        description = ''
+
+                    content = {
+                        'title': material["title"].replace('\n', ' '),
+                        'description': description,
+                        'provider_uri': material["main_url"],
+                        'material_player': material_link.replace('media', 'player'),
+                        'material_url': material_url,
+                        'language': language,
+                        'type': {"ext": "mp4", "mime": "video/mp4"},
+                        'date_created': date_created,
+                        'date_retrieved': dateYMD,
+                        'license': material["license_url"]
+                    }
                 else:
-                    date_created = ''
-
-                try:
-                    description = material["description"]
-                except:
-                    description = ''
-
-                content = {
-                    'title': material["title"].replace('\n', ' '),
-                    'description': description,
-                    'provider_uri': material["main_url"],
-                    'material_player': material_link.replace('media', 'player'),
-                    'material_url': material_url,
-                    'language': language,
-                    'type': {"ext": "mp4", "mime": "video/mp4"},
-                    'date_created': date_created,
-                    'date_retrieved': dateYMD,
-                    'license': material["license_url"]
-                }
-            else:
-                print('not tibav')
+                    print('not tibav')
             except Exception as e:
                 print('\033[93mEXCEPTION:', e)
                 print('\033[92m...continuing with the loop\033[0m\n')
