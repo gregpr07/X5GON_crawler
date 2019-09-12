@@ -26,6 +26,8 @@ def parseTIBAV():
         for material in json_read:
             content = {}
             i += 1
+            if i < 19500:
+                continue
             print('-----', str(i), '-----')
             try:
                 if material['projectkey'] == 'tibav':
@@ -44,7 +46,11 @@ def parseTIBAV():
                         'textarea.form-control::text').get()
 
                     date_created = re.findall(
-                        'year=\{(\d{4})\}', raw_date_find)[0] + '-01-01'
+                        'year=\{(\d{4})\}', raw_date_find)[0]
+                    if date_created:
+                        date_created += '-01-01'
+                    else:
+                        date_created = ''
 
                     try:
                         description = material["description"]
@@ -52,7 +58,7 @@ def parseTIBAV():
                         description = ''
 
                     content = {
-                        'title': material["title"],
+                        'title': material["title"].replace('\n', ' '),
                         'description': description,
                         'provider_uri': material["main_url"],
                         'material_player': material_link.replace('media', 'player'),
