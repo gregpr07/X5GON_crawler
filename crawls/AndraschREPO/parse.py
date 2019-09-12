@@ -45,12 +45,13 @@ def parseTIBAV():
                     raw_date_find = selector_html.css(
                         'textarea.form-control::text').get()
 
-                    date_created = re.findall(
+
+"""                     date_created = re.findall(
                         'year=\{(\d{4})\}', raw_date_find)[0]
                     if date_created:
                         date_created += '-01-01'
                     else:
-                        date_created = ''
+                        date_created = '' """
 
                     try:
                         description = material["description"]
