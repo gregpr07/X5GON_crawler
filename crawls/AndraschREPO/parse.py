@@ -29,15 +29,15 @@ def parseTIBAV():
             if i < 19500:
                 continue
             print('-----', str(i), '-----')
-
+            try:
             if material['projectkey'] == 'tibav':
                 material_link = material["main_url"]
 
                 raw_html = requests.get(material_link).text
                 selector_html = Selector(text=raw_html)
 
-                material_url = 'http:'+str(selector_html.css(
-                    'video source::attr(src)').get())
+                material_url = 'http:' + \
+                    str(selector_html.css('video source::attr(src)').get())
 
                 language = selector_html.css(
                     '.table td.value div::attr(lang)').get()
@@ -71,6 +71,9 @@ def parseTIBAV():
                 }
             else:
                 print('not tibav')
+            except Exception as e:
+                print('\033[93mEXCEPTION:', e)
+                print('\033[92m...continuing with the loop\033[0m\n')
 
             if content:
                 json.dump(content, f, indent=2)
