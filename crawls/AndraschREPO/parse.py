@@ -16,7 +16,7 @@ dateYMD = str(datetime.now().strftime("%Y-%m-%d"))
 
 def parseTIBAV():
     OUTPUT_LOCATION = ''
-    jsonname = 'tibav_v1.json'
+    jsonname = 'tibav_v2.json'
 
     with open(OUTPUT_LOCATION+jsonname, 'w+', encoding='utf-8') as f:
         f.write('[\n')
