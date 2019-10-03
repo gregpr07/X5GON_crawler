@@ -8,7 +8,7 @@ import json
 APIurl = 'https://openlearnware.tu-darmstadt.de/olw-rest-db/api/resource-detailview/index/'
 resourceURL = 'https://www.openlearnware.de/resource/'
 
-OUTPUT_LOCATION = './crawls/openlearnware/'
+OUTPUT_LOCATION = './'
 
 jsonname = 'openlearnware_v1.json'
 

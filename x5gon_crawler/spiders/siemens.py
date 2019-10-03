@@ -83,10 +83,10 @@ class X5Spider(scrapy.Spider):
             yield {
                 'title': title,
                 'description': description,
-                'material_uri': url,
-                'material_url': pdf,
+                'provider_uri': url,
+                'material_url': str(pdf)+'.pdf',
                 'language': language,
-                'type': {"ext": "pdf", "mime": "pdf/html"},
+                'type': {"ext": "pdf", "mime": "application/pdf"},
                 'date_created': date,
                 'date_retrieved': self.dateYMD,
                 'license': licenca,
